@@ -1,5 +1,4 @@
-username = 'Aquí va el usuario'
-password = 'Aquí va la contraseña'
-port     = 1512
-dsn     = 'localhost/base de datos'
-encoding = 'UTF-8'
+userid = 'usuario'
+password = 'contraseña'
+host = 'oracle0'
+service = 'practbd.oracle0.ugr.es'
