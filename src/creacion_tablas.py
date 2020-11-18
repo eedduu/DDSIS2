@@ -20,9 +20,7 @@ conexion = pyodbc.connect('DRIVER={Devart ODBC Driver for Oracle};Direct=True;Ho
 print("Se ha conectado satisfactoriamente.\n")
 
 
-
 cursor = conexion.cursor()
-
 
 
 print("Borrando tablas previamente creadas...")
@@ -80,6 +78,22 @@ cursor.execute('''
 	)''')
 
 print("Fin de creación de tablas.\n")
+
+print("Insertando tuplas...\n")
+
+cursor.execute('''INSERT INTO Stock VALUES (1,500)''')
+cursor.execute('''INSERT INTO Stock VALUES (2,700)''')
+cursor.execute('''INSERT INTO Stock VALUES (3,350)''')
+cursor.execute('''INSERT INTO Stock VALUES (4,200)''')
+cursor.execute('''INSERT INTO Stock VALUES (5,650)''')
+cursor.execute('''INSERT INTO Stock VALUES (6,400)''')
+cursor.execute('''INSERT INTO Stock VALUES (7,800)''')
+cursor.execute('''INSERT INTO Stock VALUES (8,100)''')
+cursor.execute('''INSERT INTO Stock VALUES (9,50)''')
+cursor.execute('''INSERT INTO Stock VALUES (10,1000)''')
+
+
+print("Fin de inserción de tuplas")
 
 conexion.commit()
 
