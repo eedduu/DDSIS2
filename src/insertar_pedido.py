@@ -40,6 +40,12 @@ except pyodbc.Error as error:
 except:
     print('Error no identificado insertando el pedido')
 
+
+print("Se ha introducido el pedido en la base de datos")
+conexion.commit()
+
+
+
 try:
     cursor.execute("insert into DetallePedido (Cpedido,Cproducto,Cantidad) values(?,?,?)",(int(cpedido),int(cproducto),int(cantidad)))
 except pyodbc.Error as error:
@@ -48,8 +54,7 @@ except:
     print('Error no identificado insertando el detalle del pedido')
 
 
-
-print("Se ha introducido el pedido en la base de datos")
+print("Se ha introducido el detalle del pedido en la base de datos")
 conexion.commit()
 
 
