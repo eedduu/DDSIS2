@@ -31,22 +31,16 @@ def borrar_tablas():
 		cursor.execute('''DROP TABLE DetallePedido''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla DetallePedido:\n\t{}\n'.format(error))
-	except:
-		print('Error no identificado borrando la tabla DetallePedido.')
 
 	try:
 		cursor.execute('''DROP TABLE Stock''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla Stock:\n\t{}\n'.format(error))
-	except:
-		print('Error no identificado borrando la tabla Stock.')
 
 	try:
 		cursor.execute('''DROP TABLE Pedido''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla Pedido:\n\t{}\n'.format(error))
-	except:
-		print('Error no identificado borrando la tabla Pedido.')
 
 	print('Fin de borrado de tablas.\n')
 	
@@ -86,8 +80,7 @@ def crear_tablas():
 			)''')
 	except pyodbc.Error as error:
 		print('Error creando las tablas:\n\t{}\n'.format(error))
-	except:
-		print('Error no identificado en la creación de tablas.')
+
 
 	c.commit()
 	print('Fin de creación de tablas.\n')
@@ -110,8 +103,6 @@ def insertar_tuplas_iniciales():
 		cursor.execute('''INSERT INTO Stock VALUES (10,1000)''')
 	except pyodbc.Error as error:
 		print('Error creando las tablas:\n\t{}\n'.format(error))
-	except:
-		print('Error no identificado en la creación de tablas.')
 
 	c.commit()
 
@@ -120,73 +111,101 @@ def insertar_tuplas_iniciales():
 
 ##################################################################################
 ##################################################################################
-#############          Insertado de pedidos			            ###################
+#############          Insertado de pedidos y detalles         ###################
 ##################################################################################
 ##################################################################################
-#
 
-def insertar_pedido():
 
-	print('Introduzca nuevo pedido:')
+def insertar_pedido(cpedido, ccliente, fecha):
+
+	print('Insertando pedido...')
+
 	cursor = c.cursor()
-
-	cpedido = int(input('Código del Pedido: '))
-	ccliente = int(input('Código del cliente: '))
-	dia = int(input('Día: '))
-	mes = int(input('Mes: '))
-	anyo = int(input('Año: '))
-
-	fecha = datetime.date(anyo,mes,dia).__str__()
+	err = False
 	try:
-		 cursor.execute('''INSERT INTO Pedido (Cpedido,Ccliente,FechaPedido)
+		cursor.execute('''INSERT INTO Pedido (Cpedido,Ccliente,FechaPedido)
 						VALUES(?,?,TO_DATE(?,'YYYY-MM-DD'))''',(cpedido,ccliente,fecha))
 	except pyodbc.Error as error:
-		 print('Error insertando en la tabla Pedido:\n\t{}\n'.format(error))
-	except:
-		 print('Error no identificado insertando el pedido')
+		print('Error insertando en la tabla Pedido:\n\t{}\n'.format(error))
+		err = True
 
 
-	print('Fin de introducción de pedido')
+	print('Fin de introducción de pedido\n')
+	c.commit()
+	return err
+
+
+def insertar_detalle(cpedido, cproducto, cantidad):
+	
+	print('Insertando detalle de pedido...')
+
+	cursor = c.cursor()
+	cursor.execute('''SELECT * FROM STOCK WHERE Cproducto = ?''',cproducto)
+
+	if cursor.arraysize == 0:
+		print('No existe ningún producto con ese código...')
+		return 0
+	
+	stock_disponible = (cursor.fetchone())[1]	
+	
+	if (stock_disponible < cantidad):
+		print('Cantidad de producto no disponible, {} restantes.'.format(stock_disponible))
+		return 0
+
+	cursor = c.cursor()
+
+	try:
+		cursor.execute('''INSERT INTO DetallePedido (Cpedido,Cproducto,Cantidad)
+								VALUES(?,?,?)''',(cpedido,cproducto,cantidad))
+	except pyodbc.Error as error:
+		print('Error insertando el detalle:\n\t{}\n'.format(error))
+		return 0
+	
+
+	nueva_cantidad = stock_disponible - cantidad
+
+	try:
+		cursor.execute('''UPDATE Stock SET Cantidad = ? 
+					WHERE Cproducto = ?''',(nueva_cantidad, cproducto))
+	except pyodbc.Error as error:
+		print('Error actualizando la cantidad del producto en stock:\n\t{}\n'.format(error))
+		return 0
+
+	print('Insertado detalle de pedido\n')
 	c.commit()
 
 
 
 
+##################################################################################
+##################################################################################
+#############       			   Borrado de pedidos					###################
+##################################################################################
+##################################################################################
 
 
+def borrar_pedido(cpedido):
+
+	print('Borrando pedido y todos sus detalles...')
+	cursor = c.cursor()
+
+	try:
+		cursor.execute('DELETE FROM DetallePedido WHERE Cpedido = {} '.format(cpedido))
+	except pyodbc.Error as error:
+		print('Error borrando las tuplas de la tabla DetallePedido:\n\t{}\n'.format(error))
+		return 0
+
+	try:
+		cursor.execute('''DELETE FROM Pedido WHERE Cpedido={}'''.format(cpedido))
+	except pyodbc.Error as error:
+		print('Error borrando las tuplas de la tabla Pedidos:\n\t{}\n'.format(error))
+		return 0
+
+	c.commit()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+###################################################################################
+###################################################################################
 
 
 
@@ -204,17 +223,62 @@ while True:
 		crear_tablas()
 		insertar_tuplas_iniciales()
 	elif opc==2:
-		insertar_pedido()
-		print('OPCION 2')
+
+		print('Introduzca nuevo pedido:')
+		cpedido = int(input('Código del pedido: '))
+		ccliente = int(input('Código del cliente: '))
+		dia = int(input('Día: '))
+		mes = int(input('Mes: '))
+		anyo = int(input('Año: '))
+
+		fecha_correcta = True		
+
+		try:
+			fecha = datetime.date(anyo,mes,dia).__str__()
+		except:
+			print("Fecha inválida.")
+			fecha_correcta = False
+	
+		if fecha_correcta:
+			err = insertar_pedido(cpedido, ccliente, fecha)
+		else:
+			err = not fecha_correcta
+
+		if not err:
+			while True:
+				print('Escoge una opción:')
+				print(' 1.Añadir detalle de producto.')
+				print(' 2.Eliminar todos los detalles de producto.')
+				print(' 3.Cancelar pedido.')
+				print(' 4.Finalizar pedido.')
+				opc2 = int(input('\n Entrada: '))				
+
+				if opc2==1:
+					cproducto = int(input('\n Código del producto: '))
+					cantidad = int(input('\n Cantidad: '))
+					insertar_detalle(cpedido,cproducto,cantidad)
+				elif opc2==2:
+					# Aqui va un rollback(Falta el savepoint)
+					print('OPCION 2.2')
+				elif opc2==3:
+					#Aqui va otro rollback(Falta el savepoint)
+					print('OPCION 2.3')
+				elif opc2==4:
+					#Aqui va un commit()
+					break
+				else:
+					print('Opcion no valida, vuelva a elegir.\n')
+
 	elif opc==3:
-		print('OPCION 3')
+		cpedido = int(input('Código del pedido: '))
+		borrar_pedido(cpedido)
 	elif opc==4:
 		break
 	else:
 		print('Opcion no valida, vuelva a elegir.\n')
 
 
-	
+c.commit()	
 print('Desconectandose de la bases de datos...')
 c.close()
 print('Se ha desconectado satisfactoriamente.\n')
