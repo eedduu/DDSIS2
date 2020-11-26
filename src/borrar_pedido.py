@@ -4,7 +4,7 @@ def borrar_pedido(conexion, cod_pedido):
     print('Borrando los detalles del pedido asociados al pedido: {}'.format(cod_pedido))
 
     try:
-    	cursor.execute('''DELETE FROM DetallePedido WHERE Cpedido = {} '''.format(cod_pedido))
+    	cursor.execute('DELETE FROM DetallePedido WHERE Cpedido = {} '.format(cod_pedido))
     except pyodbc.Error as error:
     	print('Error borrando las tuplas de la tabla DetallePedido:\n\t{}\n'.format(error))
     except:

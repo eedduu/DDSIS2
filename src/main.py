@@ -1,142 +1,221 @@
 import pyodbc
+import datetime
+
+print('Conectando a la base de datos...')
+
+c = pyodbc.connect('DRIVER={Devart ODBC Driver for Oracle};Direct=True;Host=oracle0;Service Name=practbd.oracle0.ugr.es;User ID=x7147725;Password=x7147725')
+
+c.autocommit = False
+
+print("Se ha conectado satisfactoriamente.\n")
 
 
-def borradoycreacion(conexion):
-	print('Borrado y creación de la base de las tablas...')
+##################################################################################
+##################################################################################
+#############           Borrado y creación de tablas           ###################
+##################################################################################
+##################################################################################
+#
+#	Documentación de pyodbc: https://github.com/mkleehammer/pyodbc/wiki/Objects
+#
 
-	cursor = conexion.cursor()
+
+def borrar_tablas():
 	
-	print("Borrando tablas previamente creadas...")
-	
+	print('Borrando las tablas...')
+
+	cursor = c.cursor()
+
+
 	try:
 		cursor.execute('''DROP TABLE DetallePedido''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla DetallePedido:\n\t{}\n'.format(error))
 	except:
 		print('Error no identificado borrando la tabla DetallePedido.')
-	
+
 	try:
 		cursor.execute('''DROP TABLE Stock''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla Stock:\n\t{}\n'.format(error))
 	except:
 		print('Error no identificado borrando la tabla Stock.')
-	
+
 	try:
 		cursor.execute('''DROP TABLE Pedido''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla Pedido:\n\t{}\n'.format(error))
 	except:
 		print('Error no identificado borrando la tabla Pedido.')
+
+	print('Fin de borrado de tablas.\n')
 	
-	print("Fin de borrado de tablas.\n")
-		
-	print("Creando las tablas...")
-	
-	cursor.execute('''
-		CREATE TABLE Stock(
-			Cproducto int,
-			Cantidad int,
-			PRIMARY KEY (Cproducto)
-		)''')
-	
-	cursor.execute('''
-		CREATE TABLE Pedido(
-			Cpedido int,
-			Ccliente int,
-			FechaPedido date,
-			PRIMARY KEY (Cpedido)
-		)''')
-	
-	
-	cursor.execute('''
-		CREATE TABLE DetallePedido(
-			Cpedido int,
-			Cproducto int,
-			Cantidad int,
-			PRIMARY KEY (Cpedido,Cproducto),
-			FOREIGN KEY (Cpedido) REFERENCES Pedido(Cpedido),
-			FOREIGN KEY (Cproducto) REFERENCES Stock(Cproducto)
-		)''')
-	
-	print("Fin de creación de tablas.\n")
-	
-	print("Insertando tuplas...\n")
-	
-	cursor.execute('''INSERT INTO Stock VALUES (1,500)''')
-	cursor.execute('''INSERT INTO Stock VALUES (2,700)''')
-	cursor.execute('''INSERT INTO Stock VALUES (3,350)''')
-	cursor.execute('''INSERT INTO Stock VALUES (4,200)''')
-	cursor.execute('''INSERT INTO Stock VALUES (5,650)''')
-	cursor.execute('''INSERT INTO Stock VALUES (6,400)''')
-	cursor.execute('''INSERT INTO Stock VALUES (7,800)''')
-	cursor.execute('''INSERT INTO Stock VALUES (8,100)''')
-	cursor.execute('''INSERT INTO Stock VALUES (9,50)''')
-	cursor.execute('''INSERT INTO Stock VALUES (10,1000)''')
-	
-	
-	print("Fin de inserción de tuplas\n")
-	
-	
-
-def borrar_pedido(conexion, cod_pedido):
-    cursor= conexion.cursor()
-
-    print('Borrando los detalles del pedido asociados al pedido: {}'.format(cod_pedido))
-
-    try:
-    	cursor.execute('''DELETE FROM DetallePedido WHERE Cpedido = {} '''.format(cod_pedido))
-    except pyodbc.Error as error:
-    	print('Error borrando las tuplas de la tabla DetallePedido:\n\t{}\n'.format(error))
-    except:
-    	print('Error no identificado borrando las tuplas de la tabla DetallePedido.')
+	c.commit()
 
 
-    print('Borrando los pedidos con código: {}'.format(cod_pedido))
+def crear_tablas():
+
+	print('Creando las tablas...')
+	cursor = c.cursor()
+
+	try:
+		cursor.execute('''
+			CREATE TABLE Stock(
+				Cproducto int,
+				Cantidad int,
+				PRIMARY KEY (Cproducto)
+			)''')
+
+		cursor.execute('''
+			CREATE TABLE Pedido(
+				Cpedido int,
+				Ccliente int,
+				FechaPedido date,
+				PRIMARY KEY (Cpedido)
+			)''')
 
 
-    try:
-    	cursor.execute('''DELETE FROM Pedido WHERE Cpedido={}'''.format(cod_pedido))
-    except pyodbc.Error as error:
-    	print('Error borrando las tuplas de la tabla Pedidos:\n\t{}\n'.format(error))
-    except:
-    	print('Error no identificado borrando las tuplas de la tabla Pedidos.')
+		cursor.execute('''
+			CREATE TABLE DetallePedido(
+				Cpedido int,
+				Cproducto int,
+				Cantidad int,
+				PRIMARY KEY (Cpedido,Cproducto),
+				FOREIGN KEY (Cpedido) REFERENCES Pedido(Cpedido),
+				FOREIGN KEY (Cproducto) REFERENCES Stock(Cproducto)
+			)''')
+	except pyodbc.Error as error:
+		print('Error creando las tablas:\n\t{}\n'.format(error))
+	except:
+		print('Error no identificado en la creación de tablas.')
 
-    print('Todos los cambios se han hecho correctamente, aplicando los cambios a la base de datos')
-    conexion.commit()
+	c.commit()
+	print('Fin de creación de tablas.\n')
 
 
-print("Conectando a la base de datos...")
+def insertar_tuplas_iniciales():
+	print('Insertando tuplas...')
+	cursor = c.cursor()
 
-conexion = pyodbc.connect('DRIVER={Devart ODBC Driver for Oracle};Direct=True;Host=oracle0;Service Name=practbd.oracle0.ugr.es;User ID=x7147725;Password=x7147725')
+	try:
+		cursor.execute('''INSERT INTO Stock VALUES (1,500)''')
+		cursor.execute('''INSERT INTO Stock VALUES (2,700)''')
+		cursor.execute('''INSERT INTO Stock VALUES (3,350)''')
+		cursor.execute('''INSERT INTO Stock VALUES (4,200)''')
+		cursor.execute('''INSERT INTO Stock VALUES (5,650)''')
+		cursor.execute('''INSERT INTO Stock VALUES (6,400)''')
+		cursor.execute('''INSERT INTO Stock VALUES (7,800)''')
+		cursor.execute('''INSERT INTO Stock VALUES (8,100)''')
+		cursor.execute('''INSERT INTO Stock VALUES (9,50)''')
+		cursor.execute('''INSERT INTO Stock VALUES (10,1000)''')
+	except pyodbc.Error as error:
+		print('Error creando las tablas:\n\t{}\n'.format(error))
+	except:
+		print('Error no identificado en la creación de tablas.')
 
-print("Se ha conectado satisfactoriamente.\n")
+	c.commit()
+
+	print('Fin de inserción de tuplas.\n')
 
 
-print("Buenos dias, escoge una opcion de las siguientes:\n1.Borrado de tablas y creacion de tablas con 10 tuplas nuevas\n2.Dar de alta nuevo pedido\n3.Borrar un pedido\n4.Salir del programa y cerrar la conexion\nNº de opcion:")
+##################################################################################
+##################################################################################
+#############          Insertado de pedidos			            ###################
+##################################################################################
+##################################################################################
+#
 
-opc = input()
+def insertar_pedido():
 
-while opc!="4":
-	if opc=="1":
-		borradoycreacion(conexion)
-	elif opc=="2":
-		print("Dando de alta nuevo pedido\n")
-		cursor= conexion.cursor()
-		cursor.execute('''INSERT INTO Pedido VALUES (1,1,TO_DATE('26/11/2020','dd/mm/yyyy'))''')
-		
-	elif opc=="3":
-		print("Introduzca el codigo de pedido a borrar:\n")
-		cod_pe=input()
-		borrar_pedido(conexion,cod_pe)
+	print('Introduzca nuevo pedido:')
+	cursor = c.cursor()
+
+	cpedido = int(input('Código del Pedido: '))
+	ccliente = int(input('Código del cliente: '))
+	dia = int(input('Día: '))
+	mes = int(input('Mes: '))
+	anyo = int(input('Año: '))
+
+	fecha = datetime.date(anyo,mes,dia).__str__()
+	try:
+		 cursor.execute('''INSERT INTO Pedido (Cpedido,Ccliente,FechaPedido)
+						VALUES(?,?,TO_DATE(?,'YYYY-MM-DD'))''',(cpedido,ccliente,fecha))
+	except pyodbc.Error as error:
+		 print('Error insertando en la tabla Pedido:\n\t{}\n'.format(error))
+	except:
+		 print('Error no identificado insertando el pedido')
+
+
+	print('Fin de introducción de pedido')
+	c.commit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+while True:
+
+	print('Escoge una opción:')
+	print(' 1.Borrado de tablas y creacion de tablas con 10 tuplas nuevas.')
+	print(' 2.Dar de alta nuevo pedido.')
+	print(' 3.Borrar un pedido.')
+	print(' 4.Salir del programa y cerrar la conexion.')
+	opc = int(input('\n Entrada: '))
+
+	if opc==1:
+		borrar_tablas()
+		crear_tablas()
+		insertar_tuplas_iniciales()
+	elif opc==2:
+		insertar_pedido()
+		print('OPCION 2')
+	elif opc==3:
+		print('OPCION 3')
+	elif opc==4:
+		break
 	else:
-		print("Opcion no valida, vuelva a insertar\n")
-	
-	print("Escoge una opcion de las siguientes:\n1.Borrado de tablas y creacion de tablas con 10 tuplas nuevas\n2.Dar de alta nuevo pedido\n3.Borrar un pedido\n4.Salir del programa y cerrar la conexion\nNº de opcion:")
-	opc = input()
+		print('Opcion no valida, vuelva a elegir.\n')
+
 
 	
-print("Desconectandose de la bases de datos...")
-conexion.close()
-print("Se ha desconectado satisfactoriamente.\n")
+print('Desconectandose de la bases de datos...')
+c.close()
+print('Se ha desconectado satisfactoriamente.\n')
 	
