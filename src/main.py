@@ -1,16 +1,16 @@
 import pyodbc
 import datetime
 
+
+# Se conecta a la base de datos
 print('Conectando a la base de datos...')
-
 c = pyodbc.connect('DRIVER={Devart ODBC Driver for Oracle};Direct=True;Host=oracle0;Service Name=practbd.oracle0.ugr.es;User ID=x7036964;Password=x7036964')
-
-
-aux= c.cursor()
-
-c.autocommit = False
-
 print("Se ha conectado satisfactoriamente.\n")
+
+# Cursor para savepoints
+aux= c.cursor()
+# Por defecto autocommit es False, dejo constancia de ello
+c.autocommit = False
 
 
 ##################################################################################
@@ -23,38 +23,42 @@ print("Se ha conectado satisfactoriamente.\n")
 #
 
 
+# Borrado de tablas
 def borrar_tablas():
 	
 	print('Borrando las tablas...')
-
 	cursor = c.cursor()
 
-
+	# Borrado de tabla DetallePedido
 	try:
 		cursor.execute('''DROP TABLE DetallePedido''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla DetallePedido:\n\t{}\n'.format(error))
 
+	# Borrado de tabla Stock
 	try:
 		cursor.execute('''DROP TABLE Stock''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla Stock:\n\t{}\n'.format(error))
 
+	# Borrado de tabla Pedido
 	try:
 		cursor.execute('''DROP TABLE Pedido''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla Pedido:\n\t{}\n'.format(error))
 
 	print('Fin de borrado de tablas.\n')
-	
-	c.commit()
 
 
+
+# Creación de tablas
 def crear_tablas():
 
 	print('Creando las tablas...')
 	cursor = c.cursor()
 
+
+	# Creacion de las tablas Stock, Pedido y DetallePedido
 	try:
 		cursor.execute('''
 			CREATE TABLE Stock(
@@ -71,9 +75,8 @@ def crear_tablas():
 				PRIMARY KEY (Cpedido)
 			)''')
 
-
 		cursor.execute('''
-			CREATE TABLE DetallePedido(
+			CREATE TABLE DetallePedido(ç
 				Cpedido int,
 				Cproducto int,
 				Cantidad int,
@@ -81,18 +84,22 @@ def crear_tablas():
 				FOREIGN KEY (Cpedido) REFERENCES Pedido(Cpedido),
 				FOREIGN KEY (Cproducto) REFERENCES Stock(Cproducto)
 			)''')
+
 	except pyodbc.Error as error:
 		print('Error creando las tablas:\n\t{}\n'.format(error))
 
-
-	c.commit()
 	print('Fin de creación de tablas.\n')
 
 
+
+# Insertar tuplas iniciales de stock
 def insertar_tuplas_iniciales():
+
 	print('Insertando tuplas...')
 	cursor = c.cursor()
 
+	# Insercción de tuplas 
+	# En caso de error en mitad del try se ejecuta rollback 
 	try:
 		cursor.execute('''INSERT INTO Stock VALUES (1,500)''')
 		cursor.execute('''INSERT INTO Stock VALUES (2,700)''')
@@ -106,8 +113,9 @@ def insertar_tuplas_iniciales():
 		cursor.execute('''INSERT INTO Stock VALUES (10,1000)''')
 	except pyodbc.Error as error:
 		print('Error creando las tablas:\n\t{}\n'.format(error))
-
-	c.commit()
+		c.rollback()
+	finally:
+		c.commit()
 
 	print('Fin de inserción de tuplas.\n')
 
@@ -118,46 +126,57 @@ def insertar_tuplas_iniciales():
 ##################################################################################
 ##################################################################################
 
-
+# Insertar tupla pedido
+# return: True si se ha producido un error
+#			 False si no se ha producido un error
 def insertar_pedido(cpedido, ccliente, fecha):
 
 	print('Insertando pedido...')
 
 	cursor = c.cursor()
-	err = False
+	error = False
+	
+	# Inserción del pedido
 	try:
 		cursor.execute('''INSERT INTO Pedido (Cpedido,Ccliente,FechaPedido)
 						VALUES(?,?,TO_DATE(?,'YYYY-MM-DD'))''',(cpedido,ccliente,fecha))
 	except pyodbc.Error as error:
 		print('Error insertando en la tabla Pedido:\n\t{}\n'.format(error))
-		err = True
-
+		# Se produjo un error
+		error = True
 
 	print('Fin de introducción de pedido\n')
-	return err
+	return error
 
 
+# Insertar detalle de un pedido
 def insertar_detalle(cpedido, cproducto, cantidad):
 	
 	print('Insertando detalle de pedido...')
 
 	cursor = c.cursor()
+	# Buscar la tupla del producto con su código
 	cursor.execute('''SELECT * FROM STOCK WHERE Cproducto = ?''',cproducto)
 
+	# Producto es la fila(tupla) del producto
 	producto = cursor.fetchone()
 	
+	# Si no existe el producto se sale
 	if producto == None:
 		print ('No hay ningún producto con ese código.')
 		return 0
 
-	stock_disponible = producto[1]	
-	
+	# Vemos que cantidad queda del producto y si es mayor de la que se ha pedido
+	stock_disponible = producto[1]
 	if (stock_disponible < cantidad):
 		print('Cantidad de producto no disponible, {} restantes.'.format(stock_disponible))
 		return 0
 
+	# Reinicio el cursor para poder hacer las insercciones
 	cursor = c.cursor()
 
+	# Inserto el detalle pedido
+	cursor.execute('SAVEPOINT predetalle')
 	try:
 		cursor.execute('''INSERT INTO DetallePedido (Cpedido,Cproducto,Cantidad)
 								VALUES(?,?,?)''',(cpedido,cproducto,cantidad))
@@ -165,14 +184,16 @@ def insertar_detalle(cpedido, cproducto, cantidad):
 		print('Error insertando el detalle:\n\t{}\n'.format(error))
 		return 0
 	
-
+	# Nueva cantidad de stock del producto
 	nueva_cantidad = stock_disponible - cantidad
 
+	#Actualizo la tupla producto
 	try:
 		cursor.execute('''UPDATE Stock SET Cantidad = ? 
 					WHERE Cproducto = ?''',(nueva_cantidad, cproducto))
 	except pyodbc.Error as error:
 		print('Error actualizando la cantidad del producto en stock:\n\t{}\n'.format(error))
+		cursor.execute('ROLLBACK TO predetalle')
 		return 0
 
 	print('Insertado detalle de pedido\n')
