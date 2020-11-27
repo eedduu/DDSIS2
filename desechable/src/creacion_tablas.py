@@ -1,3 +1,5 @@
+import pyodbc
+
 ##################################################################################
 ##################################################################################
 #############           Borrado y creación de tablas           ###################
@@ -8,52 +10,44 @@
 #
 
 
-import pyodbc
-
-#
-#	Borrado de tablas
-#
-
-def borrar_tablas(conexion):
+def borrar_tablas(c):
 	
 	print('Borrando las tablas...')
-	cursor = conexion.cursor()
 
-	# Borrado de tabla DetallePedido
+	cursor = c.cursor()
+
+
 	try:
 		cursor.execute('''DROP TABLE DetallePedido''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla DetallePedido:\n\t{}\n'.format(error))
+	except:
+		print('Error no identificado borrando la tabla DetallePedido.')
 
-	# Borrado de tabla Stock
 	try:
 		cursor.execute('''DROP TABLE Stock''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla Stock:\n\t{}\n'.format(error))
+	except:
+		print('Error no identificado borrando la tabla Stock.')
 
-	# Borrado de tabla Pedido
 	try:
 		cursor.execute('''DROP TABLE Pedido''')
 	except pyodbc.Error as error:
 		print('Error borrando la tabla Pedido:\n\t{}\n'.format(error))
+	except:
+		print('Error no identificado borrando la tabla Pedido.')
 
 	print('Fin de borrado de tablas.\n')
+	
+	c.commit()
 
 
-
-
-
-#
-# Creación de las tablas
-#
-
-def crear_tablas(conexion):
+def crear_tablas(c):
 
 	print('Creando las tablas...')
-	cursor = conexion.cursor()
+	cursor = c.cursor()
 
-
-	# Creacion de las tablas Stock, Pedido y DetallePedido
 	try:
 		cursor.execute('''
 			CREATE TABLE Stock(
@@ -70,6 +64,7 @@ def crear_tablas(conexion):
 				PRIMARY KEY (Cpedido)
 			)''')
 
+
 		cursor.execute('''
 			CREATE TABLE DetallePedido(
 				Cpedido int,
@@ -79,24 +74,19 @@ def crear_tablas(conexion):
 				FOREIGN KEY (Cpedido) REFERENCES Pedido(Cpedido),
 				FOREIGN KEY (Cproducto) REFERENCES Stock(Cproducto)
 			)''')
-
 	except pyodbc.Error as error:
 		print('Error creando las tablas:\n\t{}\n'.format(error))
+	except:
+		print('Error no identificado en la creación de tablas.')
 
+	c.commit()
 	print('Fin de creación de tablas.\n')
 
 
-#
-# Insertar tuplas iniciales de stock
-#
-def insertar_tuplas_iniciales(conexion):
-
+def insertar_tuplas_iniciales(c):
 	print('Insertando tuplas...')
-	cursor = conexion.cursor()
+	cursor = c.cursor()
 
-	# Insercción de tuplas 
-	# En caso de error en mitad del try se ejecuta rollback 
-	# y no se añade ninguna tupla
 	try:
 		cursor.execute('''INSERT INTO Stock VALUES (1,500)''')
 		cursor.execute('''INSERT INTO Stock VALUES (2,700)''')
@@ -110,12 +100,11 @@ def insertar_tuplas_iniciales(conexion):
 		cursor.execute('''INSERT INTO Stock VALUES (10,1000)''')
 	except pyodbc.Error as error:
 		print('Error creando las tablas:\n\t{}\n'.format(error))
-		conexion.rollback()
-	finally:
-		conexion.commit()
+	except:
+		print('Error no identificado en la creación de tablas.')
+
+	c.commit()
 
 	print('Fin de inserción de tuplas.\n')
-
-
 
 
