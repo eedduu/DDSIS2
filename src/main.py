@@ -3,7 +3,8 @@ import datetime
 
 print('Conectando a la base de datos...')
 
-c = pyodbc.connect('DRIVER={Devart ODBC Driver for Oracle};Direct=True;Host=oracle0;Service Name=practbd.oracle0.ugr.es;User ID=x7147725;Password=x7147725')
+c = pyodbc.connect('DRIVER={Devart ODBC Driver for Oracle};Direct=True;Host=oracle0;Service Name=practbd.oracle0.ugr.es;User ID=x7200029;Password=x7200029')
+aux= c.cursor()
 
 c.autocommit = False
 
@@ -131,7 +132,6 @@ def insertar_pedido(cpedido, ccliente, fecha):
 
 
 	print('Fin de introducción de pedido\n')
-	c.commit()
 	return err
 
 
@@ -142,10 +142,12 @@ def insertar_detalle(cpedido, cproducto, cantidad):
 	cursor = c.cursor()
 	cursor.execute('''SELECT * FROM STOCK WHERE Cproducto = ?''',cproducto)
 
-	if cursor.arraysize == 0:
-		print('No existe ningún producto con ese código...')
-		return 0
-	
+	#producto= cursor.fetchone()[1]
+	#if producto == None
+	#	print('No existe ningún producto con ese código...')
+	#	return 0
+
+
 	stock_disponible = (cursor.fetchone())[1]	
 	
 	if (stock_disponible < cantidad):
@@ -172,7 +174,6 @@ def insertar_detalle(cpedido, cproducto, cantidad):
 		return 0
 
 	print('Insertado detalle de pedido\n')
-	c.commit()
 
 
 
@@ -223,7 +224,7 @@ while True:
 		crear_tablas()
 		insertar_tuplas_iniciales()
 	elif opc==2:
-
+		aux.execute("savepoint uno")
 		print('Introduzca nuevo pedido:')
 		cpedido = int(input('Código del pedido: '))
 		ccliente = int(input('Código del cliente: '))
@@ -254,17 +255,18 @@ while True:
 				opc2 = int(input('\n Entrada: '))				
 
 				if opc2==1:
+					aux.execute("savepoint dos")
 					cproducto = int(input('\n Código del producto: '))
 					cantidad = int(input('\n Cantidad: '))
 					insertar_detalle(cpedido,cproducto,cantidad)
 				elif opc2==2:
-					# Aqui va un rollback(Falta el savepoint)
-					print('OPCION 2.2')
+					aux.execute("rollback_to dos")
+					print('Detalles del pedido cancelados')
 				elif opc2==3:
-					#Aqui va otro rollback(Falta el savepoint)
-					print('OPCION 2.3')
+					aux.execute("rollback_to uno")
+					print('Pedido cancelado')
 				elif opc2==4:
-					#Aqui va un commit()
+					aux.commit()
 					break
 				else:
 					print('Opcion no valida, vuelva a elegir.\n')
