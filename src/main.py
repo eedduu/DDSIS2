@@ -3,7 +3,9 @@ import datetime
 
 print('Conectando a la base de datos...')
 
-c = pyodbc.connect('DRIVER={Devart ODBC Driver for Oracle};Direct=True;Host=oracle0;Service Name=practbd.oracle0.ugr.es;User ID=x7200029;Password=x7200029')
+c = pyodbc.connect('DRIVER={Devart ODBC Driver for Oracle};Direct=True;Host=oracle0;Service Name=practbd.oracle0.ugr.es;User ID=x7036964;Password=x7036964')
+
+
 aux= c.cursor()
 
 c.autocommit = False
@@ -142,13 +144,13 @@ def insertar_detalle(cpedido, cproducto, cantidad):
 	cursor = c.cursor()
 	cursor.execute('''SELECT * FROM STOCK WHERE Cproducto = ?''',cproducto)
 
-	#producto= cursor.fetchone()[1]
-	#if producto == None
-	#	print('No existe ningún producto con ese código...')
-	#	return 0
+	producto = cursor.fetchone()
+	
+	if producto == None:
+		print ('No hay ningún producto con ese código.')
+		return 0
 
-
-	stock_disponible = (cursor.fetchone())[1]	
+	stock_disponible = producto[1]	
 	
 	if (stock_disponible < cantidad):
 		print('Cantidad de producto no disponible, {} restantes.'.format(stock_disponible))
@@ -224,7 +226,7 @@ while True:
 		crear_tablas()
 		insertar_tuplas_iniciales()
 	elif opc==2:
-		aux.execute("savepoint uno")
+
 		print('Introduzca nuevo pedido:')
 		cpedido = int(input('Código del pedido: '))
 		ccliente = int(input('Código del cliente: '))
@@ -232,16 +234,18 @@ while True:
 		mes = int(input('Mes: '))
 		anyo = int(input('Año: '))
 
-		fecha_correcta = True		
-
+		fecha_correcta = True	
+	
+		aux.execute('SAVEPOINT cancelar')
 		try:
 			fecha = datetime.date(anyo,mes,dia).__str__()
 		except:
-			print("Fecha inválida.")
+			print('Fecha inválida.')
 			fecha_correcta = False
 	
 		if fecha_correcta:
 			err = insertar_pedido(cpedido, ccliente, fecha)
+			aux.execute('SAVEPOINT rehacer')
 		else:
 			err = not fecha_correcta
 
@@ -255,18 +259,18 @@ while True:
 				opc2 = int(input('\n Entrada: '))				
 
 				if opc2==1:
-					aux.execute("savepoint dos")
 					cproducto = int(input('\n Código del producto: '))
 					cantidad = int(input('\n Cantidad: '))
 					insertar_detalle(cpedido,cproducto,cantidad)
 				elif opc2==2:
-					aux.execute("rollback_to dos")
-					print('Detalles del pedido cancelados')
+					aux.execute('ROLLBACK TO rehacer')
+					print('Detalles del pedido cancelados.')
 				elif opc2==3:
-					aux.execute("rollback_to uno")
-					print('Pedido cancelado')
+					aux.execute('ROLLBACK TO cancelar')
+					print('Pedido cancelado.')
 				elif opc2==4:
 					aux.commit()
+					print('Pedido completado.')
 					break
 				else:
 					print('Opcion no valida, vuelva a elegir.\n')
