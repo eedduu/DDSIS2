@@ -37,6 +37,10 @@ def insertar_detalle(conexion,cpedido, cproducto, cantidad):
 
     print('Insertando detalle de pedido...')
 
+    if (cantidad < 1):
+        print ('La cantidad debe ser positiva.')
+        return
+
     cursor = conexion.cursor()
     # Busca la tupla del producto
     cursor.execute('''SELECT * FROM STOCK WHERE Cproducto = ?''',cproducto)
@@ -51,7 +55,7 @@ def insertar_detalle(conexion,cpedido, cproducto, cantidad):
     
     # Vemos la cantidad que queda
     stock_disponible = producto[1]
-
+	
     # Vemos que queda suficiente stock
     if (stock_disponible < cantidad):
         print('Cantidad de producto no disponible, {} restantes.'.format(stock_disponible))
