@@ -16,7 +16,7 @@ import pyodbc
 
 def borrar_tablas(conexion):
 	
-	print('...Borrando las tablas...')
+	print('Borrando las tablas...')
 	cursor = conexion.cursor()
 
 	# Borrado de tabla DetallePedido
@@ -29,15 +29,15 @@ def borrar_tablas(conexion):
 	try:
 		cursor.execute('''DROP TABLE Stock''')
 	except pyodbc.Error as error:
-		print('...Error borrando la tabla Stock:\n\t{}\n'.format(error))
+		print('Error borrando la tabla Stock:\n\t{}\n'.format(error))
 
 	# Borrado de tabla Pedido
 	try:
 		cursor.execute('''DROP TABLE Pedido''')
 	except pyodbc.Error as error:
-		print('...Error borrando la tabla Pedido:\n\t{}\n'.format(error))
+		print('Error borrando la tabla Pedido:\n\t{}\n'.format(error))
 
-	print('...Fin de borrado de tablas.\n')
+	print('Fin de borrado de tablas.\n')
 
 
 
@@ -81,9 +81,9 @@ def crear_tablas(conexion):
 			)''')
 
 	except pyodbc.Error as error:
-		print('...Error creando las tablas:\n\t{}\n'.format(error))
+		print('Error creando las tablas:\n\t{}\n'.format(error))
 
-	print('...Fin de creación de tablas.\n')
+	print('Fin de creación de tablas.\n')
 
 
 #
