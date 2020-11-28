@@ -16,7 +16,7 @@ import pyodbc
 
 def borrar_tablas(conexion):
 	
-	print('Borrando las tablas...')
+	print('...Borrando las tablas...')
 	cursor = conexion.cursor()
 
 	# Borrado de tabla DetallePedido
@@ -29,15 +29,15 @@ def borrar_tablas(conexion):
 	try:
 		cursor.execute('''DROP TABLE Stock''')
 	except pyodbc.Error as error:
-		print('Error borrando la tabla Stock:\n\t{}\n'.format(error))
+		print('...Error borrando la tabla Stock:\n\t{}\n'.format(error))
 
 	# Borrado de tabla Pedido
 	try:
 		cursor.execute('''DROP TABLE Pedido''')
 	except pyodbc.Error as error:
-		print('Error borrando la tabla Pedido:\n\t{}\n'.format(error))
+		print('...Error borrando la tabla Pedido:\n\t{}\n'.format(error))
 
-	print('Fin de borrado de tablas.\n')
+	print('...Fin de borrado de tablas.\n')
 
 
 
@@ -81,9 +81,9 @@ def crear_tablas(conexion):
 			)''')
 
 	except pyodbc.Error as error:
-		print('Error creando las tablas:\n\t{}\n'.format(error))
+		print('...Error creando las tablas:\n\t{}\n'.format(error))
 
-	print('Fin de creación de tablas.\n')
+	print('...Fin de creación de tablas.\n')
 
 
 #
@@ -91,7 +91,7 @@ def crear_tablas(conexion):
 #
 def insertar_tuplas_iniciales(conexion):
 
-	print('Insertando tuplas...')
+	print('...Insertando tuplas...')
 	cursor = conexion.cursor()
 
 	# Insercción de tuplas 
@@ -109,12 +109,12 @@ def insertar_tuplas_iniciales(conexion):
 		cursor.execute('''INSERT INTO Stock VALUES (9,50)''')
 		cursor.execute('''INSERT INTO Stock VALUES (10,1000)''')
 	except pyodbc.Error as error:
-		print('Error creando las tablas:\n\t{}\n'.format(error))
+		print('...Error insertando las tuplas:\n\t{}\n'.format(error))
 		conexion.rollback()
 	finally:
 		conexion.commit()
 
-	print('Fin de inserción de tuplas.\n')
+	print('...Fin de inserción de tuplas.\n')
 
 
 

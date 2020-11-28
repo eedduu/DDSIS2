@@ -16,12 +16,15 @@ aux = conexion.cursor()
 while True:
 
     # Opción del menú
-    print('Escoge una opción:')
-    print(' 1.Borrado de tablas y creacion de tablas con 10 tuplas nuevas.')
-    print(' 2.Dar de alta nuevo pedido.')
-    print(' 3.Borrar un pedido.')
-    print(' 4.Salir del programa y cerrar la conexion.')
+    print('#################################################################')
+    print('# Escoge una opción:                                            #')
+    print('# 1.Borrado de tablas y creacion de tablas con 10 tuplas nuevas.#')
+    print('# 2.Dar de alta nuevo pedido.                                   #')
+    print('# 3.Borrar un pedido.                                           #')
+    print('# 4.Salir del programa y cerrar la conexion.                    #')
+    print('#################################################################')
     opc = int(input('\n Entrada: '))
+
 
 
 
@@ -37,11 +40,11 @@ while True:
         print('Introduzca nuevo pedido:')
 
         # Datos de la tabla pedido
-        cpedido = int(input('Código del pedido: '))
-        ccliente = int(input('Código del cliente: '))
-        dia = int(input('Día: '))
-        mes = int(input('Mes: '))
-        anyo = int(input('Año: '))
+        cpedido = int(input('   Código del pedido: '))
+        ccliente = int(input('  Código del cliente: '))
+        dia = int(input('   Día: '))
+        mes = int(input('   Mes: '))
+        anyo = int(input('  Año: '))
 
         
         fecha_correcta = True
@@ -71,11 +74,13 @@ while True:
             while True:
                  
                 # Elegir opción
-                print('Escoge una opción:')
-                print(' 1.Añadir detalle de producto.')
-                print(' 2.Eliminar todos los detalles de producto.')
-                print(' 3.Cancelar pedido.')
-                print(' 4.Finalizar pedido.')
+                print('#############################################')
+                print('# Escoge una opción:                        #')
+                print('# 1.Añadir detalle de producto.             #')
+                print('# 2.Eliminar todos los detalles de producto.#')
+                print('# 3.Cancelar pedido.                        #')
+                print('# 4.Finalizar pedido.                       #')
+                print('#############################################')
                 opc2 = int(input('\n Entrada: '))
 
 
